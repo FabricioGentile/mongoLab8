@@ -4,6 +4,12 @@ const port = 4000
 const path = require('path');
 const bodyParser = require('body-parser');
 const cors = require('cors');
+const mongoose = require('mongoose');
+
+const mongoDB = 'mongodb+srv://user:user@labmongodb-epmbq.mongodb.net/test?retryWrites=true&w=majority';
+
+mongoose.connect(mongoDB, {useNewUrlParser:true});
+
 app.use(cors());
 
 app.use(function (req, res, next) {
@@ -20,6 +26,15 @@ app.use(bodyParser.urlencoded({ extended: false }))
 // parse application/json
 app.use(bodyParser.json())
 
+const Schema = mongoose.Schema;
+
+const movieSchema = new Schema({
+    title:String,
+    year:String,
+    poster:String
+})
+
+const MovieModel = mongoose.model('movie', movieSchema);
 
 app.get('/', (req, res) => res.send('Hello World!'))
 
@@ -49,11 +64,31 @@ app.post('/api/movies', (req,res) =>{
     console.log(req.body.title);
     console.log(req.body.year);
     console.log(req.body.poster);
+
+    MovieModel.create({
+        title: req.body.title,
+        year: req.body.year,
+        poster: req.body.poster
+    });
+
     res.json('Data Uploaded');
+})
+
+app.get('/api/movies/:id', (req, res) => {
+    console.log(req.params.id);
+
+    MovieModel.findById(req.params.id, (error, data) =>{
+        res.json(data);
+    })
 })
 
 app.get('/api/movies', (req, res) => {
 
+    MovieModel.find((error,data)=>{
+        res.json({movies:data});
+    })
+
+    /*
     const myMovies = [
         {
             "Title": "Avengers: Infinity War",
@@ -66,13 +101,16 @@ app.get('/api/movies', (req, res) => {
             "Poster": "https://m.media-amazon.com/images/M/MV5BMjQ0MTgyNjAxMV5BMl5BanBnXkFtZTgwNjUzMDkyODE@._V1_SX300.jpg"
         }
     ];
+    
 
     res.status(200).json(
         {
             movies: myMovies,
             message: 'Data Sent'
         });
+        */
 })
+
 
 app.get('/hello/:name', (req, res) => {
     console.log(req.params.name);
